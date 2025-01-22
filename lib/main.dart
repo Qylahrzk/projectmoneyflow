@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+// ignore: unnecessary_import
 import 'package:hive/hive.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:moneyflow/screens/log_expenses_screen.dart';
@@ -75,6 +76,7 @@ class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
   @override
+  // ignore: library_private_types_in_public_api
   _HomeScreenState createState() => _HomeScreenState();
 }
 
