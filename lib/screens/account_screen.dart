@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
 import 'package:image_picker/image_picker.dart';
+// ignore: unused_import
+import 'package:moneyflow/screens/settings_screen.dart';
 import 'dart:io';
 
 class AccountScreen extends StatefulWidget {
@@ -12,24 +14,31 @@ class AccountScreen extends StatefulWidget {
 
 class _AccountScreenState extends State<AccountScreen> {
   final ImagePicker _picker = ImagePicker();
-  String? _profilePicture;
-  String _name = 'User Name';
-  String _email = 'user@example.com';
   late Box userBox;
+  String? _profilePicture;
+  String _name = 'John Doe';
+  String _email = 'j-doe@gmail.com';
+  String _defaultCurrency = 'USD (\$)';
+  String _sorting = 'Date';
+  String _summary = 'Average';
+  bool _syncEnabled = false;
 
   @override
   void initState() {
     super.initState();
-    // Open Hive box in initState
     userBox = Hive.box('user');
-    _initializeUserData();
+    _loadUserData();
   }
 
-  void _initializeUserData() {
+  void _loadUserData() {
     setState(() {
       _profilePicture = userBox.get('profilePicture');
-      _name = userBox.get('name', defaultValue: 'User Name');
-      _email = userBox.get('email', defaultValue: 'user@example.com');
+      _name = userBox.get('name', defaultValue: 'John Doe');
+      _email = userBox.get('email', defaultValue: 'j-doe@gmail.com');
+      _defaultCurrency = userBox.get('defaultCurrency', defaultValue: 'USD (\$)');
+      _sorting = userBox.get('sorting', defaultValue: 'Date');
+      _summary = userBox.get('summary', defaultValue: 'Average');
+      _syncEnabled = userBox.get('syncEnabled', defaultValue: false);
     });
   }
 
@@ -43,10 +52,10 @@ class _AccountScreenState extends State<AccountScreen> {
     }
   }
 
-  void _editProfileName() {
+  Future<void> _editProfileName() async {
     TextEditingController nameController = TextEditingController(text: _name);
 
-    showDialog(
+    await showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
@@ -78,106 +87,30 @@ class _AccountScreenState extends State<AccountScreen> {
     );
   }
 
-  void _showSecuritySettings() {
-    Navigator.pushNamed(context, '/security');
-  }
-
-  void _toggleSync(bool value) {
-    // Example: Add functionality for sync toggle
-    setState(() {
-      userBox.put('syncEnabled', value);
-    });
-  }
-
-  void _showSortingOptions() {
-    showDialog(
+  Future<void> _selectOption({
+    required String title,
+    required List<String> options,
+    required Function(String) onSelected,
+    required String currentSelection,
+  }) async {
+    final selectedOption = await showDialog<String>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Sorting Options'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              title: const Text('Date'),
-              onTap: () {
-                userBox.put('sorting', 'Date');
-                Navigator.pop(context);
-              },
-            ),
-            ListTile(
-              title: const Text('Amount'),
-              onTap: () {
-                userBox.put('sorting', 'Amount');
-                Navigator.pop(context);
-              },
-            ),
-          ],
-        ),
+      builder: (context) => SimpleDialog(
+        title: Text('Select $title'),
+        children: options
+            .map(
+              (option) => SimpleDialogOption(
+                onPressed: () => Navigator.pop(context, option),
+                child: Text(option),
+              ),
+            )
+            .toList(),
       ),
     );
-  }
 
-  void _showSummaryOptions() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Summary Options'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              title: const Text('Average'),
-              onTap: () {
-                userBox.put('summary', 'Average');
-                Navigator.pop(context);
-              },
-            ),
-            ListTile(
-              title: const Text('Total'),
-              onTap: () {
-                userBox.put('summary', 'Total');
-                Navigator.pop(context);
-              },
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _showCurrencyOptions() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Select Default Currency'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              title: const Text('USD (\$)'),
-              onTap: () {
-                userBox.put('currency', 'USD (\$)');
-                Navigator.pop(context);
-              },
-            ),
-            ListTile(
-              title: const Text('EUR (€)'),
-              onTap: () {
-                userBox.put('currency', 'EUR (€)');
-                Navigator.pop(context);
-              },
-            ),
-            ListTile(
-              title: const Text('GBP (£)'),
-              onTap: () {
-                userBox.put('currency', 'GBP (£)');
-                Navigator.pop(context);
-              },
-            ),
-          ],
-        ),
-      ),
-    );
+    if (selectedOption != null && selectedOption != currentSelection) {
+      onSelected(selectedOption);
+    }
   }
 
   @override
@@ -189,7 +122,13 @@ class _AccountScreenState extends State<AccountScreen> {
           IconButton(
             icon: const Icon(Icons.settings),
             onPressed: () {
-              Navigator.pushNamed(context, '/settings');
+              // Navigate to the settings screen 
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const CustomSettingsScreen(),
+                )
+              );
             },
           ),
         ],
@@ -197,84 +136,139 @@ class _AccountScreenState extends State<AccountScreen> {
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Profile Section
-            GestureDetector(
-              onTap: _pickProfilePicture,
-              child: CircleAvatar(
-                radius: 50,
-                backgroundImage: _profilePicture != null
-                    ? FileImage(File(_profilePicture!))
-                    : const AssetImage('assets/default_profile.jpg')
-                        as ImageProvider,
-                child: _profilePicture == null
-                    ? const Icon(Icons.camera_alt, size: 30, color: Colors.white)
-                    : null,
+            // Center the profile section
+            Center(
+              child: GestureDetector(
+                onTap: _pickProfilePicture,
+                child: CircleAvatar(
+                  radius: 50,
+                  backgroundImage: _profilePicture != null
+                      ? FileImage(File(_profilePicture!))
+                      : const AssetImage('assets/default_profile.jpg')
+                          as ImageProvider,
+                  child: _profilePicture == null
+                      ? const Icon(Icons.camera_alt, size: 30, color: Colors.white)
+                      : null,
+                ),
               ),
             ),
             const SizedBox(height: 16),
-            Text(
-              _name,
-              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
-            Text(
-              _email,
-              style: const TextStyle(fontSize: 14, color: Colors.grey),
-            ),
-            const SizedBox(height: 10),
-            ElevatedButton(
-              onPressed: _editProfileName,
-              child: const Text('Edit Profile'),
+            Center(
+              child: Column(
+                children: [
+                  Text(
+                    _name,
+                    style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  ),
+                  Text(
+                    _email,
+                    style: const TextStyle(fontSize: 14, color: Colors.grey),
+                  ),
+                  const SizedBox(height: 10),
+                  ElevatedButton(
+                    onPressed: _editProfileName,
+                    child: const Text('Edit Profile'),
+                  ),
+                ],
+              ),
             ),
             const SizedBox(height: 20),
+
             // General Section
-            const Align(
-              alignment: Alignment.centerLeft,
-              child: Text(
-                'General',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
+            const Text(
+              'General',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 10),
-            _buildListTile('Security', 'Face ID', Icons.security,
-                onTap: _showSecuritySettings),
             SwitchListTile(
-              title: const Text('Sync'),
-              subtitle: const Text('iCloud Sync'),
-              value: userBox.get('syncEnabled', defaultValue: false),
-              onChanged: _toggleSync,
+              title: const Text('Data Sync'),
+              subtitle: const Text('Enable Data Sync'),
+              value: _syncEnabled,
+              onChanged: (value) {
+                setState(() {
+                  _syncEnabled = value;
+                  userBox.put('syncEnabled', _syncEnabled);
+                });
+              },
             ),
             const SizedBox(height: 20),
-            // Subscriptions Section
-            const Align(
-              alignment: Alignment.centerLeft,
-              child: Text(
-                'My Subscriptions',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
+
+            // My Subscriptions Section
+            const Text(
+              'My Subscriptions',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 10),
-            _buildListTile('Sorting', 'Date', Icons.sort,
-                onTap: _showSortingOptions),
-            _buildListTile('Summary', 'Average', Icons.summarize,
-                onTap: _showSummaryOptions),
-            _buildListTile('Default Currency', 'USD (\$)', Icons.monetization_on,
-                onTap: _showCurrencyOptions),
+            ListTile(
+              leading: const Icon(Icons.sort),
+              title: const Text('Sorting'),
+              subtitle: Text(_sorting),
+              onTap: () => _selectOption(
+                title: 'Sorting',
+                options: ['Date', 'Alphabetical', 'Category'],
+                currentSelection: _sorting,
+                onSelected: (newSorting) {
+                  setState(() {
+                    _sorting = newSorting;
+                    userBox.put('sorting', _sorting);
+                  });
+                },
+              ),
+            ),
+            ListTile(
+              leading: const Icon(Icons.summarize),
+              title: const Text('Summary'),
+              subtitle: Text(_summary),
+              onTap: () => _selectOption(
+                title: 'Summary',
+                options: ['Average', 'Total', 'Detailed'],
+                currentSelection: _summary,
+                onSelected: (newSummary) {
+                  setState(() {
+                    _summary = newSummary;
+                    userBox.put('summary', _summary);
+                  });
+                },
+              ),
+            ),
+            ListTile(
+              leading: const Icon(Icons.monetization_on),
+              title: const Text('Default Currency'),
+              subtitle: Text(_defaultCurrency),
+              onTap: () => _selectOption(
+                title: 'Currency',
+                options: ['USD (\$)', 'EUR (€)', 'GBP (£)', 'JPY (¥)'],
+                currentSelection: _defaultCurrency,
+                onSelected: (newCurrency) {
+                  setState(() {
+                    _defaultCurrency = newCurrency;
+                    userBox.put('defaultCurrency', _defaultCurrency);
+                  });
+                },
+              ),
+            ),
           ],
         ),
       ),
     );
   }
+}
 
-  Widget _buildListTile(String title, String subtitle, IconData icon,
-      {required VoidCallback onTap}) {
-    return ListTile(
-      leading: Icon(icon, color: Colors.teal),
-      title: Text(title),
-      subtitle: Text(subtitle),
-      trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-      onTap: onTap,
+// Updated Dummy SettingsScreen widget to avoid conflict
+class CustomSettingsScreen extends StatelessWidget {
+  const CustomSettingsScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Settings Screen'),
+      ),
+      body: const Center(
+        child: Text('This is the settings screen.'),
+      ),
     );
   }
 }
