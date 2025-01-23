@@ -122,13 +122,7 @@ class _AccountScreenState extends State<AccountScreen> {
           IconButton(
             icon: const Icon(Icons.settings),
             onPressed: () {
-              // Navigate to the settings screen 
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const CustomSettingsScreen(),
-                )
-              );
+              Navigator.pushNamed(context, '/settings');
             },
           ),
         ],
