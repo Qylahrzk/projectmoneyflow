@@ -6,17 +6,21 @@ plugins {
 }
 
 android {
-    namespace = "com.example.moneyflow"
-    compileSdk = flutter.compileSdkVersion
-    ndkVersion = flutter.ndkVersion
+    compileSdkVersion 34
 
+    defaultConfig {
+        minSdkVersion 21
+        targetSdkVersion 34
+    }
+
+    // Add these lines to specify Java compatibility
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
     }
 
     kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_1_8
+        jvmTarget = '17'
     }
 
     defaultConfig {
