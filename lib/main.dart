@@ -9,6 +9,7 @@ import 'package:moneyflow/screens/edit_profile_screen.dart';
 import 'package:moneyflow/screens/settings_screen.dart';
 import 'package:moneyflow/screens/signup_screen.dart';
 import 'package:moneyflow/screens/budget_tracking_screen.dart';
+import 'package:moneyflow/screens/security_screen.dart'; // New route for Security
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -65,6 +66,7 @@ class MoneyFlowApp extends StatelessWidget {
             '/home': (context) => const HomeScreen(),
             '/edit-profile': (context) => const EditProfileScreen(),
             '/settings': (context) => const SettingsScreen(),
+            '/security': (context) => const SecurityScreen(), // Add Security route
           },
         );
       },
