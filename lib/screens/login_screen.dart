@@ -1,5 +1,4 @@
 // File Login Screen
-
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
 
@@ -74,25 +73,50 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Log In')),
+      backgroundColor: Colors.black,
+      appBar: AppBar(
+        title: const Text('Log In'),
+        backgroundColor: Colors.black,
+      ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Form(
           key: _formKey,
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
+              // Added MONEYFLOW text widget
+              Text(
+                'MONEYFLOW',
+                style: TextStyle(
+                  fontSize: 32,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
+              SizedBox(height: 40), // Added spacing after MONEYFLOW
+
+              // Form fields
               TextFormField(
                 controller: _emailController,
-                decoration: const InputDecoration(labelText: 'Email'),
+                style: TextStyle(color: Colors.white),
+                decoration: const InputDecoration(
+                  labelText: 'Email',
+                  labelStyle: TextStyle(color: Colors.grey),
+                ),
                 validator: _validateEmail,
               ),
+              const SizedBox(height: 16),
               TextFormField(
                 controller: _passwordController,
+                style: TextStyle(color: Colors.white),
                 decoration: InputDecoration(
                   labelText: 'Password',
+                  labelStyle: TextStyle(color: Colors.grey),
                   suffixIcon: IconButton(
                     icon: Icon(
                       _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                      color: Colors.grey,
                     ),
                     onPressed: _togglePasswordVisibility,
                   ),
@@ -102,13 +126,17 @@ class _LoginScreenState extends State<LoginScreen> {
               const SizedBox(height: 20),
               ElevatedButton(
                 onPressed: _login,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.purpleAccent,
+                  minimumSize: Size(double.infinity, 50),
+                ),
                 child: const Text('Log In'),
               ),
               TextButton(
                 onPressed: () {
                   Navigator.pushNamed(context, '/signup');
                 },
-                child: const Text('Create an Account'),
+                child: const Text('Create an Account', style: TextStyle(color: Colors.grey)),
               ),
             ],
           ),
@@ -117,3 +145,4 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 }
+
