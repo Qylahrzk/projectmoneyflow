@@ -3,7 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 
 class BudgetTrackingScreen extends StatefulWidget {
-  const BudgetTrackingScreen({super.key, required Map expensesByCategory, required Map budgets});
+  const BudgetTrackingScreen({super.key, required Map<String, double> expensesByCategory, required double totalBudget, required Map budgets, required double totalExpenses});
 
   @override
   _BudgetTrackingScreenState createState() => _BudgetTrackingScreenState();
@@ -18,10 +18,10 @@ class _BudgetTrackingScreenState extends State<BudgetTrackingScreen> {
     super.initState();
     _expensesByCategory = {};
     _budgets = {};
-    _loadData(); // Load data from SharedPreferences
+    _loadData();
   }
 
-  /// Load expenses and budgets from SharedPreferences
+  /// Load budgets and expenses from SharedPreferences
   Future<void> _loadData() async {
     final prefs = await SharedPreferences.getInstance();
 
@@ -39,14 +39,14 @@ class _BudgetTrackingScreenState extends State<BudgetTrackingScreen> {
     });
   }
 
-  /// Save expenses and budgets to SharedPreferences
+  /// Save budgets and expenses to SharedPreferences
   Future<void> _saveData() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('expensesByCategory', json.encode(_expensesByCategory));
     await prefs.setString('budgets', json.encode(_budgets));
   }
 
-  /// Add a new expense to a category
+  /// Add a new expense
   void _addExpense(String category, double amount) {
     setState(() {
       if (_expensesByCategory.containsKey(category)) {
@@ -55,18 +55,69 @@ class _BudgetTrackingScreenState extends State<BudgetTrackingScreen> {
         _expensesByCategory[category] = amount;
       }
     });
-    _saveData(); // Save updated expenses
+    _saveData();
   }
 
-  /// Set a budget for a category
+  /// Set or update a budget for a category
   void _setBudget(String category, double newBudget) {
     setState(() {
       _budgets[category] = newBudget;
+      // Ensure any category not tracked yet is initialized in expenses
+      if (!_expensesByCategory.containsKey(category)) {
+        _expensesByCategory[category] = 0.0;
+      }
     });
-    _saveData(); // Save updated budgets
+    _saveData();
   }
 
-  /// Show a dialog to add a new expense
+  /// Show a dialog to set a new budget
+  Future<void> _showSetBudgetDialog() async {
+    final categoryController = TextEditingController();
+    final budgetController = TextEditingController();
+
+    await showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Set a New Budget'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: categoryController,
+                decoration: const InputDecoration(labelText: 'Category'),
+              ),
+              TextField(
+                controller: budgetController,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(labelText: 'Budget Amount'),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () {
+                final category = categoryController.text.trim();
+                final budget = double.tryParse(budgetController.text);
+
+                if (category.isNotEmpty && budget != null) {
+                  _setBudget(category, budget);
+                  Navigator.pop(context);
+                }
+              },
+              child: const Text('Save'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  /// Show a dialog to add an expense
   Future<void> _showAddExpenseDialog() async {
     String? selectedCategory;
     final amountController = TextEditingController();
@@ -109,6 +160,7 @@ class _BudgetTrackingScreenState extends State<BudgetTrackingScreen> {
             TextButton(
               onPressed: () {
                 final amount = double.tryParse(amountController.text);
+
                 if (selectedCategory != null && amount != null) {
                   _addExpense(selectedCategory!, amount);
                   Navigator.pop(context);
@@ -122,81 +174,87 @@ class _BudgetTrackingScreenState extends State<BudgetTrackingScreen> {
     );
   }
 
-  /// Show a dialog to set a budget
-  Future<void> _showSetBudgetDialog(String category, double currentBudget) async {
-    final budgetController = TextEditingController(text: currentBudget.toString());
+  /// Get a summary of total spent vs. total budget
+  double _getTotalBudget() {
+    return _budgets.values.fold(0.0, (sum, item) => sum + item);
+  }
 
-    await showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text('Set Budget for $category'),
-          content: TextField(
-            controller: budgetController,
-            keyboardType: TextInputType.number,
-            decoration: const InputDecoration(labelText: 'Enter budget'),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel'),
-            ),
-            TextButton(
-              onPressed: () {
-                final newBudget = double.tryParse(budgetController.text);
-                if (newBudget != null) {
-                  _setBudget(category, newBudget);
-                  Navigator.pop(context);
-                }
-              },
-              child: const Text('Save'),
-            ),
-          ],
-        );
-      },
-    );
+  double _getTotalSpent() {
+    return _expensesByCategory.values.fold(0.0, (sum, item) => sum + item);
   }
 
   @override
   Widget build(BuildContext context) {
+    final totalBudget = _getTotalBudget();
+    final totalSpent = _getTotalSpent();
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Budget Tracking'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.add_chart),
+            onPressed: _showSetBudgetDialog,
+          ),
+        ],
       ),
-      body: ListView(
-        children: _budgets.keys.map((category) {
-          final spent = _expensesByCategory[category] ?? 0.0;
-          final budget = _budgets[category] ?? 0.0;
-
-          return Card(
+      body: Column(
+        children: [
+          // Budget Summary
+          Card(
+            margin: const EdgeInsets.all(12),
             child: ListTile(
-              title: Text(category),
-              subtitle: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const SizedBox(height: 8),
-                  LinearProgressIndicator(
-                    value: (budget > 0) ? (spent / budget).clamp(0.0, 1.0) : 0.0,
-                    backgroundColor: Colors.grey[300],
-                    valueColor: AlwaysStoppedAnimation<Color>(
-                      (spent > budget) ? Colors.red : Colors.green,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Spent: \$${spent.toStringAsFixed(2)} / Budget: \$${budget.toStringAsFixed(2)}',
-                  ),
-                ],
+              title: const Text('Overall Budget Summary'),
+              subtitle: Text(
+                'Total Budget: \$${totalBudget.toStringAsFixed(2)}\nTotal Spent: \$${totalSpent.toStringAsFixed(2)}',
               ),
-              trailing: IconButton(
-                icon: const Icon(Icons.edit),
-                onPressed: () {
-                  _showSetBudgetDialog(category, budget);
-                },
+              trailing: Text(
+                totalSpent > totalBudget ? 'Over Budget!' : 'On Track',
+                style: TextStyle(
+                  color: totalSpent > totalBudget ? Colors.red : Colors.green,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
-          );
-        }).toList(),
+          ),
+          Expanded(
+            child: _budgets.isEmpty
+                ? const Center(
+                    child: Text('No budgets set yet. Tap the + icon to get started!'),
+                  )
+                : ListView(
+                    children: _budgets.keys.map((category) {
+                      final spent = _expensesByCategory[category] ?? 0.0;
+                      final budget = _budgets[category]!;
+
+                      return Card(
+                        child: ListTile(
+                          title: Text(category),
+                          subtitle: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const SizedBox(height: 8),
+                              LinearProgressIndicator(
+                                value: (spent / budget).clamp(0.0, 1.0),
+                                backgroundColor: Colors.grey[300],
+                                valueColor: AlwaysStoppedAnimation<Color>(spent > budget ? Colors.red : Colors.green),
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                'Spent: \$${spent.toStringAsFixed(2)} / Budget: \$${budget.toStringAsFixed(2)}',
+                              ),
+                            ],
+                          ),
+                          trailing: IconButton(
+                            icon: const Icon(Icons.add),
+                            onPressed: _showAddExpenseDialog,
+                          ),
+                        ),
+                      );
+                    }).toList(),
+                  ),
+          ),
+        ],
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: _showAddExpenseDialog,
