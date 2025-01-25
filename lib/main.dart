@@ -87,7 +87,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   final List<Widget> _pages = [
     const LogExpensesScreen(),
-    const BudgetTrackingScreen(expensesByCategory: {}, budgets: {}),
+    const BudgetTrackingScreen(expensesByCategory: {}, budgets: {}, totalExpenses: 0.0, totalBudget: 0.0,),
     const AccountScreen(),
   ];
 
