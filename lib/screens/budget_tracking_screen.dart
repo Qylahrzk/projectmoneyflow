@@ -3,7 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 
 class BudgetTrackingScreen extends StatefulWidget {
-  const BudgetTrackingScreen({Key? key}) : super(key: key);
+  const BudgetTrackingScreen({super.key, required Map expensesByCategory, required Map budgets});
 
   @override
   _BudgetTrackingScreenState createState() => _BudgetTrackingScreenState();
