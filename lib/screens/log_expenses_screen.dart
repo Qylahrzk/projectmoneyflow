@@ -85,67 +85,75 @@ class _LogExpensesScreenState extends State<LogExpensesScreen> {
   }
 
   void _showAddExpenseDialog() {
-    String selectedCategory = 'General';
-
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Add Expense'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: _titleController,
-              decoration: const InputDecoration(labelText: 'Title'),
-            ),
-            TextField(
-              controller: _amountController,
-              decoration: const InputDecoration(labelText: 'Amount'),
-              keyboardType: TextInputType.number,
-            ),
-            DropdownButton<String>(
-              value: selectedCategory,
-              onChanged: (value) {
-                setState(() {
-                  selectedCategory = value!;
-                });
+      builder: (context) {
+        String selectedCategory = 'General'; // Local state for category
+        return AlertDialog(
+          title: const Text('Add Expense'),
+          content: StatefulBuilder(
+            builder: (BuildContext context, StateSetter setState) {
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextField(
+                    controller: _titleController,
+                    decoration: const InputDecoration(labelText: 'Title'),
+                  ),
+                  TextField(
+                    controller: _amountController,
+                    decoration: const InputDecoration(labelText: 'Amount'),
+                    keyboardType: TextInputType.number,
+                  ),
+                  DropdownButton<String>(
+                    value: selectedCategory,
+                    onChanged: (value) {
+                      setState(() {
+                        selectedCategory = value!;
+                      });
+
+                      print(selectedCategory);
+                    },
+                    items: ['General', 'Food', 'Transportation', 'Shopping']
+                        .map((category) => DropdownMenuItem<String>(
+                              value: category,
+                              child: Text(category),
+                            ))
+                        .toList(),
+                  ),
+                ],
+              );
+            },
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
               },
-              items: ['General', 'Food', 'Transportation', 'Shopping']
-                  .map((category) => DropdownMenuItem<String>(
-                        value: category,
-                        child: Text(category),
-                      ))
-                  .toList(),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                if (_titleController.text.isNotEmpty &&
+                    _amountController.text.isNotEmpty) {
+                  _addExpense(
+                    _titleController.text,
+                    double.parse(_amountController.text),
+                    selectedCategory,
+                  );
+                  _titleController.clear();
+                  _amountController.clear();
+                  Navigator.of(context).pop();
+                }
+              },
+              child: const Text('Add'),
             ),
           ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-            },
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              if (_titleController.text.isNotEmpty &&
-                  _amountController.text.isNotEmpty) {
-                _addExpense(
-                  _titleController.text,
-                  double.parse(_amountController.text),
-                  selectedCategory,
-                );
-                _titleController.clear();
-                _amountController.clear();
-                Navigator.of(context).pop();
-              }
-            },
-            child: const Text('Add'),
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
+
 
   @override
   Widget build(BuildContext context) {
