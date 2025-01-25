@@ -1,27 +1,15 @@
-// File: log_expenses_screen.dart
-
 import 'package:flutter/material.dart';
-import 'package:moneyflow/screens/budget_tracking_screen.dart';
-import 'package:moneyflow/screens/receipt_scanner_screen.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:intl/intl.dart';
-
-// ignore: unnecessary_import
-import 'package:hive/hive.dart';
-// ignore: unused_import
-import 'package:moneyflow/models/expense_model.dart';
-// ignore: unused_import
+import 'package:moneyflow/screens/budget_tracking_screen.dart';
 import 'package:moneyflow/screens/spending_insights_screen.dart';
-
-import 'dart:convert'; // For JSON encoding/decoding
-import 'package:shared_preferences/shared_preferences.dart';
-
+import 'package:image_picker/image_picker.dart';
+import 'package:google_ml_kit/google_ml_kit.dart';
 
 class LogExpensesScreen extends StatefulWidget {
   const LogExpensesScreen({super.key});
 
   @override
-  // ignore: library_private_types_in_public_api
   _LogExpensesScreenState createState() => _LogExpensesScreenState();
 }
 
@@ -30,49 +18,43 @@ class _LogExpensesScreenState extends State<LogExpensesScreen> {
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _amountController = TextEditingController();
 
-  Map<String, double> _budgets = {};
+  Map<String, double> _expensesByCategory = {};
 
   @override
   void initState() {
     super.initState();
-    _loadBudgets();
+    _loadExpensesByCategory();
   }
 
-  // Method to load budgets from SharedPreferences
-  Future<void> _loadBudgets() async {
-    final prefs = await SharedPreferences.getInstance();
-    final String? budgetsString = prefs.getString('budgets');
-    if (budgetsString != null) {
-      final Map<String, dynamic> decodedBudgets = jsonDecode(budgetsString);
-      setState(() {
-        _budgets = decodedBudgets.map((key, value) => MapEntry(key, value.toDouble()));
-      });
-    } else {
-      setState(() {
-        _budgets = {}; // Default empty budgets if none are saved
-      });
-    }
+  @override
+  void dispose() {
+    _titleController.dispose();
+    _amountController.dispose();
+    super.dispose();
   }
 
-  // Method to calculate total expenses by category
-  Map<String, double> _calculateExpenseByCategory() {
-    final Map<String, double> expensesByCategory = {};
+  /// Load expenses and calculate totals by category
+  void _loadExpensesByCategory() {
+    final expenses = _expenseBox.values.toList();
+    final Map<String, double> categoryTotals = {};
 
-    for (int i = 0; i < _expenseBox.length; i++) {
-      final expense = _expenseBox.getAt(i);
-      final String category = expense['category'];
-      final double amount = expense['amount'];
+    for (final expense in expenses) {
+      if (expense is Map) {
+        final category = expense['category'] ?? 'General';
+        final amount = expense['amount'] ?? 0.0;
 
-      if (expensesByCategory.containsKey(category)) {
-        expensesByCategory[category] = expensesByCategory[category]! + amount;
-      } else {
-        expensesByCategory[category] = amount;
+        categoryTotals[category] = (categoryTotals[category] ?? 0) + amount;
       }
     }
 
-    return expensesByCategory;
+    setState(() {
+      _expensesByCategory = categoryTotals;
+    });
+
+    print('Expenses by Category: $_expensesByCategory'); // Debug log
   }
 
+  /// Add a new expense
   void _addExpense(String title, double amount, String category) {
     final expense = {
       'title': title,
@@ -80,50 +62,47 @@ class _LogExpensesScreenState extends State<LogExpensesScreen> {
       'category': category,
       'date': DateTime.now().toIso8601String(),
     };
+
     _expenseBox.add(expense);
-    setState(() {});
+    _loadExpensesByCategory(); // Update category totals
   }
 
+  /// Show dialog to add a new expense
   void _showAddExpenseDialog() {
+    String selectedCategory = 'General';
+
     showDialog(
       context: context,
       builder: (context) {
-        String selectedCategory = 'General'; // Local state for category
         return AlertDialog(
           title: const Text('Add Expense'),
-          content: StatefulBuilder(
-            builder: (BuildContext context, StateSetter setState) {
-              return Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  TextField(
-                    controller: _titleController,
-                    decoration: const InputDecoration(labelText: 'Title'),
-                  ),
-                  TextField(
-                    controller: _amountController,
-                    decoration: const InputDecoration(labelText: 'Amount'),
-                    keyboardType: TextInputType.number,
-                  ),
-                  DropdownButton<String>(
-                    value: selectedCategory,
-                    onChanged: (value) {
-                      setState(() {
-                        selectedCategory = value!;
-                      });
-
-                      print(selectedCategory);
-                    },
-                    items: ['General', 'Food', 'Transportation', 'Shopping']
-                        .map((category) => DropdownMenuItem<String>(
-                              value: category,
-                              child: Text(category),
-                            ))
-                        .toList(),
-                  ),
-                ],
-              );
-            },
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: _titleController,
+                decoration: const InputDecoration(labelText: 'Title'),
+              ),
+              TextField(
+                controller: _amountController,
+                decoration: const InputDecoration(labelText: 'Amount'),
+                keyboardType: TextInputType.number,
+              ),
+              DropdownButton<String>(
+                value: selectedCategory,
+                onChanged: (value) {
+                  setState(() {
+                    selectedCategory = value!;
+                  });
+                },
+                items: ['General', 'Food', 'Transportation', 'Shopping']
+                    .map((category) => DropdownMenuItem<String>(
+                          value: category,
+                          child: Text(category),
+                        ))
+                    .toList(),
+              ),
+            ],
           ),
           actions: [
             TextButton(
@@ -134,16 +113,23 @@ class _LogExpensesScreenState extends State<LogExpensesScreen> {
             ),
             ElevatedButton(
               onPressed: () {
-                if (_titleController.text.isNotEmpty &&
-                    _amountController.text.isNotEmpty) {
-                  _addExpense(
-                    _titleController.text,
-                    double.parse(_amountController.text),
-                    selectedCategory,
-                  );
-                  _titleController.clear();
-                  _amountController.clear();
-                  Navigator.of(context).pop();
+                final title = _titleController.text.trim();
+                final amountText = _amountController.text.trim();
+
+                if (title.isNotEmpty && amountText.isNotEmpty) {
+                  try {
+                    final amount = double.parse(amountText);
+                    _addExpense(title, amount, selectedCategory);
+                    _titleController.clear();
+                    _amountController.clear();
+                    Navigator.of(context).pop();
+                  } catch (e) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Please enter a valid numeric amount.'),
+                      ),
+                    );
+                  }
                 }
               },
               child: const Text('Add'),
@@ -154,6 +140,61 @@ class _LogExpensesScreenState extends State<LogExpensesScreen> {
     );
   }
 
+  /// Pick a receipt image from the gallery
+  Future<void> _pickReceiptImage() async {
+    final ImagePicker picker = ImagePicker();
+    final XFile? image = await picker.pickImage(source: ImageSource.gallery);
+
+    if (image != null) {
+      _scanReceipt(image);
+    }
+  }
+
+  /// Scan the receipt using Google ML Kit OCR
+  Future<void> _scanReceipt(XFile image) async {
+    final inputImage = InputImage.fromFilePath(image.path);
+    final textDetector = GoogleMlKit.vision.textRecognizer();
+    final recognizedText = await textDetector.processImage(inputImage);
+
+    String scannedText = recognizedText.text;
+    print("Scanned Text: $scannedText");
+
+    // Now, process the scanned text to extract the expense title and amount
+    _processScannedText(scannedText);
+  }
+
+  /// Process the scanned text
+  void _processScannedText(String text) {
+    final title = _extractTitleFromText(text);  // Implement method to extract title
+    final amount = _extractAmountFromText(text); // Implement method to extract amount
+
+    if (title != null && amount != null) {
+      _addExpense(title, amount, 'General');
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Unable to extract title/amount. Please try again.')),
+      );
+    }
+  }
+
+  /// Extract the title from the scanned text (basic implementation)
+  String? _extractTitleFromText(String text) {
+    final lines = text.split('\n');
+    if (lines.isNotEmpty) {
+      return lines[0].trim();  // Assuming the title is the first line
+    }
+    return null;
+  }
+
+  /// Extract the amount from the scanned text (basic implementation)
+  double? _extractAmountFromText(String text) {
+    final regex = RegExp(r'\d+(\.\d{1,2})?');
+    final match = regex.firstMatch(text);
+    if (match != null) {
+      return double.tryParse(match.group(0)!);
+    }
+    return null;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -168,15 +209,14 @@ class _LogExpensesScreenState extends State<LogExpensesScreen> {
                 context,
                 MaterialPageRoute(
                   builder: (context) => BudgetTrackingScreen(
-                    expensesByCategory: _calculateExpenseByCategory(),
-                    budgets: _budgets
+                    expensesByCategory: _expensesByCategory, budgets: {},
                   ),
                 ),
               );
             },
           ),
           IconButton(
-            icon: const Icon(Icons.insights), // Add Insights Icon
+            icon: const Icon(Icons.insights),
             onPressed: () {
               Navigator.push(
                 context,
@@ -192,50 +232,37 @@ class _LogExpensesScreenState extends State<LogExpensesScreen> {
         valueListenable: _expenseBox.listenable(),
         builder: (context, Box box, _) {
           if (box.isEmpty) {
-            return const Center(
-              child: Text('No expenses logged yet!'),
-            );
+            return const Center(child: Text('No expenses logged yet!'));
           }
           return ListView.builder(
             itemCount: box.length,
             itemBuilder: (context, index) {
               final expense = box.getAt(index);
-              return ListTile(
-                title: Text(expense['title']),
-                subtitle: Text(
-                  '${expense['category']} - ${DateFormat('yyyy-MM-dd').format(DateTime.parse(expense['date']))}',
-                ),
-                trailing: Text('\$${expense['amount'].toStringAsFixed(2)}'),
-              );
+              if (expense is Map) {
+                return ListTile(
+                  title: Text(expense['title']),
+                  subtitle: Text(
+                    '${expense['category']} - ${DateFormat('yyyy-MM-dd').format(DateTime.parse(expense['date']))}',
+                  ),
+                  trailing: Text('\$${expense['amount'].toStringAsFixed(2)}'),
+                );
+              }
+              return const SizedBox.shrink();
             },
           );
         },
       ),
-      floatingActionButton: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          FloatingActionButton(
-            heroTag: 'add_manual',
-            onPressed: _showAddExpenseDialog,
-            child: const Icon(Icons.add),
-          ),
-          const SizedBox(height: 10),
-          FloatingActionButton(
-            heroTag: 'scan_receipt',
-            onPressed: () async {
-              final result = await Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const ReceiptScannerScreen()),
-                );
-                if (result != null && result is Map<String, dynamic>) {
-                  _addExpense(result['title'], result['amount'], 'General');
-                }
-              },
-              child: const Icon(Icons.receipt),
-            ),
-          ],
+      floatingActionButton: FloatingActionButton(
+        onPressed: _showAddExpenseDialog,
+        child: const Icon(Icons.add),
+      ),
+      // Add a button for scanning receipts with just an icon (camera or receipt icon)
+      persistentFooterButtons: [
+        IconButton(
+          icon: const Icon(Icons.camera_alt),  // Camera icon for scanning receipts
+          onPressed: _pickReceiptImage,
         ),
-      );
-    }
+      ],
+    );
   }
+}
