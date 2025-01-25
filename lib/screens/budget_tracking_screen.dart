@@ -3,10 +3,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 
 class BudgetTrackingScreen extends StatefulWidget {
-  const BudgetTrackingScreen({super.key, required Map expensesByCategory, required Map budgets});
+  const BudgetTrackingScreen({Key? key}) : super(key: key);
 
   @override
-  // ignore: library_private_types_in_public_api
   _BudgetTrackingScreenState createState() => _BudgetTrackingScreenState();
 }
 
@@ -89,7 +88,9 @@ class _BudgetTrackingScreenState extends State<BudgetTrackingScreen> {
                   );
                 }).toList(),
                 onChanged: (value) {
-                  selectedCategory = value;
+                  setState(() {
+                    selectedCategory = value;
+                  });
                 },
                 decoration: const InputDecoration(labelText: 'Category'),
               ),
@@ -204,4 +205,3 @@ class _BudgetTrackingScreenState extends State<BudgetTrackingScreen> {
     );
   }
 }
-
