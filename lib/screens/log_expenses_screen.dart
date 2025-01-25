@@ -209,7 +209,7 @@ class _LogExpensesScreenState extends State<LogExpensesScreen> {
                 context,
                 MaterialPageRoute(
                   builder: (context) => BudgetTrackingScreen(
-                    expensesByCategory: _expensesByCategory, budgets: {},
+                    expensesByCategory: _expensesByCategory, budgets: {}, totalBudget: 0.0, totalExpenses: 0.0,
                   ),
                 ),
               );
