@@ -159,8 +159,39 @@ class _LogExpensesScreenState extends State<LogExpensesScreen> {
     String scannedText = recognizedText.text;
     print("Scanned Text: $scannedText");
 
-    // Now, process the scanned text to extract the expense title and amount
-    _processScannedText(scannedText);
+    // Show the scanned text in a dialog for verification
+    _showScannedTextDialog(scannedText);
+  }
+
+  /// Show a dialog to display the scanned text and let the user decide
+  void _showScannedTextDialog(String scannedText) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Scanned Receipt Text'),
+          content: SingleChildScrollView(
+            child: Text(scannedText),  // Show the recognized text
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // Close the dialog without adding the expense
+              },
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                // Proceed with extracting title and amount, then add the expense
+                _processScannedText(scannedText);
+                Navigator.of(context).pop(); // Close the dialog
+              },
+              child: const Text('Add Expense'),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   /// Process the scanned text
