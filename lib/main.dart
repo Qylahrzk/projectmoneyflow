@@ -43,19 +43,19 @@ class MoneyFlowApp extends StatelessWidget {
           debugShowCheckedModeBanner: false,
           title: 'MoneyFlow',
           theme: ThemeData(
-            primarySwatch: Colors.teal,
+            primarySwatch: Colors.purple,
             brightness: Brightness.light,
             appBarTheme: const AppBarTheme(
-              backgroundColor: Colors.teal,
+              backgroundColor: Colors.purpleAccent,
               foregroundColor: Colors.white,
             ),
           ),
           darkTheme: ThemeData(
             brightness: Brightness.dark,
-            primarySwatch: Colors.teal,
+            primarySwatch: Colors.purple,
             appBarTheme: const AppBarTheme(
               backgroundColor: Colors.black,
-              foregroundColor: Colors.teal,
+              foregroundColor: Colors.purpleAccent,
             ),
           ),
           themeMode: isDarkMode ? ThemeMode.dark : ThemeMode.light,
@@ -64,7 +64,7 @@ class MoneyFlowApp extends StatelessWidget {
             '/login': (context) => const LoginScreen(),
             '/signup': (context) => const SignupScreen(),
             '/home': (context) => const HomeScreen(),
-            '/edit-profile': (context) => const EditProfileScreen(),
+            '/edit-profile': (context) => const EditProfileScreen(currentName: '',),
             '/settings': (context) => const SettingsScreen(),
             '/security': (context) => const SecurityScreen(), // Add Security route
           },
@@ -87,7 +87,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   final List<Widget> _pages = [
     const LogExpensesScreen(),
-    const BudgetTrackingScreen(expensesByCategory: {}, budgets: {}, totalExpenses: 0.0, totalBudget: 0.0,),
+    const BudgetTrackingScreen(expensesByCategory: {}, budgets: {}, totalBudget: 0.0, totalExpenses: 0.0,),
     const AccountScreen(),
   ];
 
@@ -113,7 +113,7 @@ class _HomeScreenState extends State<HomeScreen> {
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedIndex,
         onTap: _onItemTapped,
-        selectedItemColor: Colors.teal,
+        selectedItemColor: Colors.yellow,
         items: const [
           BottomNavigationBarItem(
             icon: Icon(Icons.attach_money),
