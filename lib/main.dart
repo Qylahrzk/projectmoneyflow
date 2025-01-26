@@ -9,7 +9,8 @@ import 'package:moneyflow/screens/edit_profile_screen.dart';
 import 'package:moneyflow/screens/settings_screen.dart';
 import 'package:moneyflow/screens/signup_screen.dart';
 import 'package:moneyflow/screens/budget_tracking_screen.dart';
-import 'package:moneyflow/screens/security_screen.dart'; // New route for Security
+import 'package:moneyflow/screens/security_screen.dart';
+import 'package:moneyflow/screens/spending_insights_screen.dart'; // New route for Security
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -88,6 +89,7 @@ class _HomeScreenState extends State<HomeScreen> {
   final List<Widget> _pages = [
     const LogExpensesScreen(),
     const BudgetTrackingScreen(expensesByCategory: {}, budgets: {}, totalBudget: 0.0, totalExpenses: 0.0,),
+    const SpendingInsightsScreen(), // New Spending Insights screen
     const AccountScreen(),
   ];
 
@@ -106,14 +108,19 @@ class _HomeScreenState extends State<HomeScreen> {
               ? 'MoneyFlow - Expenses'
               : _selectedIndex == 1
                   ? 'Budget Tracking'
-                  : 'Account',
+                  : _selectedIndex == 2
+                      ? 'Spending Insight'
+                      : 'Account',
         ),
       ),
       body: _pages[_selectedIndex],
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedIndex,
         onTap: _onItemTapped,
-        selectedItemColor: Colors.yellow,
+        selectedItemColor: Colors.purpleAccent, // Highlight selected icon
+        unselectedItemColor: Colors.grey,      // Dim unselected icons
+        backgroundColor: Colors.white,         // Ensure it stands out (or Colors.black in dark mode)
+        elevation: 10.0,                        // Add shadow for separation
         items: const [
           BottomNavigationBarItem(
             icon: Icon(Icons.attach_money),
@@ -122,6 +129,10 @@ class _HomeScreenState extends State<HomeScreen> {
           BottomNavigationBarItem(
             icon: Icon(Icons.track_changes),
             label: 'Budget Tracking',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.insights),
+            label: 'Insights',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.account_circle),
