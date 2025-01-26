@@ -28,18 +28,20 @@ class _AccountScreenState extends State<AccountScreen> {
     _loadUserData();
   }
 
+  // Load user data from Hive
   void _loadUserData() {
     setState(() {
       _profilePicture = userBox.get('profilePicture');
-      _name = userBox.get('name', defaultValue: 'John Doe');
-      _email = userBox.get('email', defaultValue: 'j-doe@gmail.com');
-      _defaultCurrency = userBox.get('defaultCurrency', defaultValue: 'USD (\$)');
+      _name = userBox.get('name', defaultValue: 'Admin');
+      _email = userBox.get('email', defaultValue: 'nuraqilahnur@gmail.com');
+      _defaultCurrency = userBox.get('defaultCurrency', defaultValue: 'MYR (\RM)');
       _sorting = userBox.get('sorting', defaultValue: 'Date');
       _summary = userBox.get('summary', defaultValue: 'Average');
       _syncEnabled = userBox.get('syncEnabled', defaultValue: false);
     });
   }
 
+  // Pick and save a new profile picture
   Future<void> _pickProfilePicture() async {
     final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
     if (image != null) {
@@ -50,7 +52,7 @@ class _AccountScreenState extends State<AccountScreen> {
     }
   }
 
-  // Combined edit profile dialog for both name and email
+  // Edit profile (name and email) dialog
   Future<void> _editProfile() async {
     TextEditingController nameController = TextEditingController(text: _name);
     TextEditingController emailController = TextEditingController(text: _email);
@@ -101,6 +103,7 @@ class _AccountScreenState extends State<AccountScreen> {
     );
   }
 
+  // General selection dialog for options like currency, sorting, etc.
   Future<void> _selectOption({
     required String title,
     required List<String> options,
@@ -146,7 +149,7 @@ class _AccountScreenState extends State<AccountScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Center the profile section
+            // Profile Picture
             Center(
               child: GestureDetector(
                 onTap: _pickProfilePicture,
@@ -163,6 +166,8 @@ class _AccountScreenState extends State<AccountScreen> {
               ),
             ),
             const SizedBox(height: 16),
+
+            // User Info
             Center(
               child: Column(
                 children: [
@@ -176,7 +181,7 @@ class _AccountScreenState extends State<AccountScreen> {
                   ),
                   const SizedBox(height: 10),
                   ElevatedButton(
-                    onPressed: _editProfile,  // This now opens the combined edit profile dialog
+                    onPressed: _editProfile,
                     child: const Text('Edit Profile'),
                   ),
                 ],
@@ -203,7 +208,7 @@ class _AccountScreenState extends State<AccountScreen> {
             ),
             const SizedBox(height: 20),
 
-            // My Subscriptions Section
+            // Subscriptions Section
             const Text(
               'My Subscriptions',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
@@ -259,23 +264,6 @@ class _AccountScreenState extends State<AccountScreen> {
             ),
           ],
         ),
-      ),
-    );
-  }
-}
-
-// Updated Dummy SettingsScreen widget to avoid conflict
-class CustomSettingsScreen extends StatelessWidget {
-  const CustomSettingsScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Settings Screen'),
-      ),
-      body: const Center(
-        child: Text('This is the settings screen.'),
       ),
     );
   }
