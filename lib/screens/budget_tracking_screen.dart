@@ -6,6 +6,7 @@ class BudgetTrackingScreen extends StatefulWidget {
   const BudgetTrackingScreen({super.key, required Map<String, double> expensesByCategory, required double totalBudget, required Map budgets, required double totalExpenses});
 
   @override
+  // ignore: library_private_types_in_public_api
   _BudgetTrackingScreenState createState() => _BudgetTrackingScreenState();
 }
 
