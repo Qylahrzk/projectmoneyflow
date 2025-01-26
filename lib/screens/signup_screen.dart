@@ -87,7 +87,7 @@ class _SignupScreenState extends State<SignupScreen> {
                 decoration: const InputDecoration(
                   labelText: 'Name',
                   filled: true,
-                  fillColor: Colors.white,
+                  fillColor: Colors.black,
                 ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
@@ -102,7 +102,7 @@ class _SignupScreenState extends State<SignupScreen> {
                 decoration: const InputDecoration(
                   labelText: 'Email',
                   filled: true,
-                  fillColor: Colors.white,
+                  fillColor: Colors.black,
                 ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
@@ -120,7 +120,7 @@ class _SignupScreenState extends State<SignupScreen> {
                 decoration: const InputDecoration(
                   labelText: 'Password',
                   filled: true,
-                  fillColor: Colors.white,
+                  fillColor: Colors.black,
                 ),
                 obscureText: true,
                 validator: (value) {
