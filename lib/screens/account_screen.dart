@@ -50,53 +50,29 @@ class _AccountScreenState extends State<AccountScreen> {
     }
   }
 
-  Future<void> _editProfileName() async {
+  // Combined edit profile dialog for both name and email
+  Future<void> _editProfile() async {
     TextEditingController nameController = TextEditingController(text: _name);
-
-    await showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text('Edit Profile Name'),
-          content: TextField(
-            controller: nameController,
-            decoration: const InputDecoration(labelText: 'Name'),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                if (nameController.text.isNotEmpty) {
-                  setState(() {
-                    _name = nameController.text;
-                    userBox.put('name', _name);
-                  });
-                  Navigator.pop(context);
-                }
-              },
-              child: const Text('Save'),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  Future<void> _editProfileEmail() async {
     TextEditingController emailController = TextEditingController(text: _email);
 
     await showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text('Edit Email'),
-          content: TextField(
-            controller: emailController,
-            decoration: const InputDecoration(labelText: 'Email'),
-            keyboardType: TextInputType.emailAddress,
+          title: const Text('Edit Profile'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: nameController,
+                decoration: const InputDecoration(labelText: 'Name'),
+              ),
+              TextField(
+                controller: emailController,
+                decoration: const InputDecoration(labelText: 'Email'),
+                keyboardType: TextInputType.emailAddress,
+              ),
+            ],
           ),
           actions: [
             TextButton(
@@ -105,10 +81,13 @@ class _AccountScreenState extends State<AccountScreen> {
             ),
             ElevatedButton(
               onPressed: () {
-                if (emailController.text.isNotEmpty &&
+                if (nameController.text.isNotEmpty &&
+                    emailController.text.isNotEmpty &&
                     emailController.text.contains('@')) {
                   setState(() {
+                    _name = nameController.text;
                     _email = emailController.text;
+                    userBox.put('name', _name);
                     userBox.put('email', _email);
                   });
                   Navigator.pop(context);
@@ -197,13 +176,8 @@ class _AccountScreenState extends State<AccountScreen> {
                   ),
                   const SizedBox(height: 10),
                   ElevatedButton(
-                    onPressed: _editProfileName,
+                    onPressed: _editProfile,  // This now opens the combined edit profile dialog
                     child: const Text('Edit Profile'),
-                  ),
-                  const SizedBox(height: 10),
-                  ElevatedButton(
-                    onPressed: _editProfileEmail,
-                    child: const Text('Edit Email'),
                   ),
                 ],
               ),
