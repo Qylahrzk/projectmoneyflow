@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:intl/intl.dart';
@@ -10,6 +11,7 @@ class LogExpensesScreen extends StatefulWidget {
   const LogExpensesScreen({super.key});
 
   @override
+  // ignore: library_private_types_in_public_api
   _LogExpensesScreenState createState() => _LogExpensesScreenState();
 }
 
@@ -51,7 +53,9 @@ class _LogExpensesScreenState extends State<LogExpensesScreen> {
       _expensesByCategory = categoryTotals;
     });
 
-    print('Expenses by Category: $_expensesByCategory'); // Debug log
+    if (kDebugMode) {
+      print('Expenses by Category: $_expensesByCategory');
+    } // Debug log
   }
 
   /// Add a new expense
@@ -157,7 +161,9 @@ class _LogExpensesScreenState extends State<LogExpensesScreen> {
     final recognizedText = await textDetector.processImage(inputImage);
 
     String scannedText = recognizedText.text;
-    print("Scanned Text: $scannedText");
+    if (kDebugMode) {
+      print("Scanned Text: $scannedText");
+    }
 
     // Show the scanned text in a dialog for verification
     _showScannedTextDialog(scannedText);
