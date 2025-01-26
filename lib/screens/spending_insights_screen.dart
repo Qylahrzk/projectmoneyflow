@@ -45,102 +45,119 @@ class _SpendingInsightsScreenState extends State<SpendingInsightsScreen> {
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            // Total Spending
-            Card(
-              elevation: 4,
-              child: ListTile(
-                title: const Text('Total Spending'),
-                subtitle: Text('\$${totalSpending.toStringAsFixed(2)}'),
-                leading: const Icon(Icons.attach_money),
-              ),
-            ),
-            const SizedBox(height: 16),
-
-            // Spending by Category (Pie Chart)
-            Expanded(
-              child: Card(
-                elevation: 4,
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    children: [
-                      const Text(
-                        'Spending by Category',
-                        style: TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                      const SizedBox(height: 16),
-                      Expanded(
-                        child: PieChart(
-                          PieChartData(
-                            sections: spendingByCategory.entries.map((entry) {
-                              final percentage = (entry.value / totalSpending) * 100;
-                              return PieChartSectionData(
-                                color: _getCategoryColor(entry.key),
-                                value: entry.value,
-                                title: '${percentage.toStringAsFixed(1)}%',
-                                radius: 50,
-                              );
-                            }).toList(),
-                            centerSpaceRadius: 40,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
+        child: spendingByCategory.isEmpty || totalSpending == 0
+            ? Center(
+                child: Text(
+                  'No spending data available',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
-              ),
-            ),
-            const SizedBox(height: 16),
+              )
+            : Column(
+                children: [
+                  // Total Spending
+                  Card(
+                    elevation: 4,
+                    child: ListTile(
+                      title: const Text('Total Spending'),
+                      subtitle: Text('\$${totalSpending.toStringAsFixed(2)}'),
+                      leading: const Icon(Icons.attach_money),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
 
-            // Spending by Category (Bar Chart)
-            Expanded(
-              child: Card(
-                elevation: 4,
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    children: [
-                      const Text(
-                        'Spending by Category (Bar)',
-                        style: TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                      const SizedBox(height: 16),
-                      Expanded(
-                        child: BarChart(
-                          BarChartData(
-                            barGroups: spendingByCategory.entries.map((entry) {
-                              return BarChartGroupData(
-                                x: spendingByCategory.keys.toList().indexOf(entry.key),
-                                barRods: [
-                                  BarChartRodData(
-                                    toY: entry.value,
-                                    color: _getCategoryColor(entry.key),
-                                    width: 16,
-                                  ),
-                                ],
-                              );
-                            }).toList(),
-                            titlesData: FlTitlesData(
-                              bottomTitles: AxisTitles(
-                                sideTitles: SideTitles(
-                                  showTitles: true,getTitlesWidget: (value, _) {
-                                    return Text(spendingByCategory.keys.elementAt(value.toInt()));
-                                  },
+                  // Spending by Category (Pie Chart)
+                  Expanded(
+                    child: Card(
+                      elevation: 4,
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Column(
+                          children: [
+                            const Text(
+                              'Spending by Category',
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                            const SizedBox(height: 16),
+                            Expanded(
+                              child: PieChart(
+                                PieChartData(
+                                  sections: spendingByCategory.entries.map((entry) {
+                                    final percentage = (entry.value / totalSpending) * 100;
+                                    return PieChartSectionData(
+                                      color: _getCategoryColor(entry.key),
+                                      value: entry.value,
+                                      title: percentage > 0
+                                          ? '${percentage.toStringAsFixed(1)}%'
+                                          : '',
+                                      radius: 50,
+                                    );
+                                  }).toList(),
+                                  centerSpaceRadius: 40,
                                 ),
                               ),
                             ),
-                          )
+                          ],
                         ),
                       ),
-                    ],
+                    ),
                   ),
-                ),
+                  const SizedBox(height: 16),
+
+                  // Spending by Category (Bar Chart)
+                  Expanded(
+                    child: Card(
+                      elevation: 4,
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Column(
+                          children: [
+                            const Text(
+                              'Spending by Category (Bar)',
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                            const SizedBox(height: 16),
+                            Expanded(
+                              child: BarChart(
+                                BarChartData(
+                                  barGroups: spendingByCategory.entries.map((entry) {
+                                    return BarChartGroupData(
+                                      x: spendingByCategory.keys
+                                          .toList()
+                                          .indexOf(entry.key),
+                                      barRods: [
+                                        BarChartRodData(
+                                          toY: entry.value,
+                                          color: _getCategoryColor(entry.key),
+                                          width: 16,
+                                        ),
+                                      ],
+                                    );
+                                  }).toList(),
+                                  titlesData: FlTitlesData(
+                                    bottomTitles: AxisTitles(
+                                      sideTitles: SideTitles(
+                                        showTitles: true,
+                                        getTitlesWidget: (value, _) {
+                                          if (value.toInt() >=
+                                              spendingByCategory.keys.length) {
+                                            return const SizedBox.shrink();
+                                          }
+                                          return Text(spendingByCategory.keys
+                                              .elementAt(value.toInt()));
+                                        },
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
-            ),
-          ],
-        ),
       ),
     );
   }
@@ -149,14 +166,14 @@ class _SpendingInsightsScreenState extends State<SpendingInsightsScreen> {
   Color _getCategoryColor(String category) {
     switch (category) {
       case 'Food':
-        return Colors.orange;
+        return Colors.yellow;
       case 'Transportation':
-        return Colors.blue;
+        return Colors.lightBlue;
       case 'Shopping':
-        return Colors.pink;
+        return Colors.pinkAccent;
       case 'General':
       default:
-        return Colors.green;
+        return Colors.teal; // Default color for unknown categories
     }
   }
 }
