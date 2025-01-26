@@ -3,7 +3,7 @@ import 'package:hive/hive.dart';
 import 'package:image_picker/image_picker.dart'; // For picking images
 
 class EditProfileScreen extends StatefulWidget {
-  const EditProfileScreen({super.key});
+  const EditProfileScreen({super.key, required String currentName});
 
   @override
   State<EditProfileScreen> createState() => _EditProfileScreenState();
