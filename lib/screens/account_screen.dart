@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
 import 'package:image_picker/image_picker.dart';
-// ignore: unused_import
-import 'package:moneyflow/screens/settings_screen.dart';
 import 'dart:io';
 
 class AccountScreen extends StatefulWidget {
@@ -75,6 +73,43 @@ class _AccountScreenState extends State<AccountScreen> {
                   setState(() {
                     _name = nameController.text;
                     userBox.put('name', _name);
+                  });
+                  Navigator.pop(context);
+                }
+              },
+              child: const Text('Save'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _editProfileEmail() async {
+    TextEditingController emailController = TextEditingController(text: _email);
+
+    await showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Edit Email'),
+          content: TextField(
+            controller: emailController,
+            decoration: const InputDecoration(labelText: 'Email'),
+            keyboardType: TextInputType.emailAddress,
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                if (emailController.text.isNotEmpty &&
+                    emailController.text.contains('@')) {
+                  setState(() {
+                    _email = emailController.text;
+                    userBox.put('email', _email);
                   });
                   Navigator.pop(context);
                 }
@@ -165,6 +200,11 @@ class _AccountScreenState extends State<AccountScreen> {
                     onPressed: _editProfileName,
                     child: const Text('Edit Profile'),
                   ),
+                  const SizedBox(height: 10),
+                  ElevatedButton(
+                    onPressed: _editProfileEmail,
+                    child: const Text('Edit Email'),
+                  ),
                 ],
               ),
             ),
@@ -233,7 +273,7 @@ class _AccountScreenState extends State<AccountScreen> {
               subtitle: Text(_defaultCurrency),
               onTap: () => _selectOption(
                 title: 'Currency',
-                options: ['USD (\$)', 'EUR (€)', 'GBP (£)', 'JPY (¥)'],
+                options: ['USD (\$)', 'EUR (€)', 'MYR (RM)', 'JPY (¥)'],
                 currentSelection: _defaultCurrency,
                 onSelected: (newCurrency) {
                   setState(() {
