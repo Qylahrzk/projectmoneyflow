@@ -175,6 +175,15 @@ class _BudgetTrackingScreenState extends State<BudgetTrackingScreen> {
     );
   }
 
+  /// Clear all budgets and expenses
+  Future<void> _clearData() async {
+    setState(() {
+      _expensesByCategory.clear();
+      _budgets.clear();
+    });
+    _saveData();
+  }
+
   /// Get a summary of total spent vs. total budget
   double _getTotalBudget() {
     return _budgets.values.fold(0.0, (sum, item) => sum + item);
@@ -193,6 +202,10 @@ class _BudgetTrackingScreenState extends State<BudgetTrackingScreen> {
       appBar: AppBar(
         title: const Text('Budget Tracking'),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.delete),
+            onPressed: _clearData, // Clear all budgets and expenses
+          ),
           IconButton(
             icon: const Icon(Icons.add_chart),
             onPressed: _showSetBudgetDialog,
