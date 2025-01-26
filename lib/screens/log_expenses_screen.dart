@@ -118,7 +118,6 @@ class _LogExpensesScreenState extends State<LogExpensesScreen> {
   }
 
   /// Pick and scan a receipt using ML Kit
-  // ignore: unused_element
   Future<void> _pickReceiptImage() async {
     final ImagePicker picker = ImagePicker();
     final XFile? image = await picker.pickImage(source: ImageSource.gallery);
@@ -182,11 +181,15 @@ class _LogExpensesScreenState extends State<LogExpensesScreen> {
     return lines.isNotEmpty ? lines[0].trim() : null;
   }
 
-  /// Basic amount extraction from scanned text
+  /// Extract amount with RM from scanned text
   double? _extractAmountFromText(String text) {
-    final regex = RegExp(r'\d+(\.\d{1,2})?');
+    final regex = RegExp(r'RM\s?\d+(\.\d{1,2})?'); // Look for "RM" followed by number
     final match = regex.firstMatch(text);
-    return match != null ? double.tryParse(match.group(0)!) : null;
+    if (match != null) {
+      final cleanMatch = match.group(0)?.replaceAll(RegExp(r'[^\d.]'), ''); // Remove "RM" and spaces
+      return cleanMatch != null ? double.tryParse(cleanMatch) : null;
+    }
+    return null;
   }
 
   @override
@@ -198,6 +201,11 @@ class _LogExpensesScreenState extends State<LogExpensesScreen> {
           IconButton(
             icon: const Icon(Icons.delete),
             onPressed: _clearExpenses,
+          ),
+          // Button to trigger receipt scanning
+          IconButton(
+            icon: const Icon(Icons.camera_alt),
+            onPressed: _pickReceiptImage,
           ),
         ],
       ),
@@ -217,7 +225,7 @@ class _LogExpensesScreenState extends State<LogExpensesScreen> {
                   subtitle: Text(
                     '${expense['category']} - ${DateFormat.yMMMd().format(DateTime.parse(expense['date']))}',
                   ),
-                  trailing: Text('\$${expense['amount'].toStringAsFixed(2)}'),
+                  trailing: Text('RM ${expense['amount'].toStringAsFixed(2)}'), // Display amount with RM
                 );
               }
               return const SizedBox.shrink();
