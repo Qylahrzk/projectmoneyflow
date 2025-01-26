@@ -1,4 +1,4 @@
-// File Login Screen
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
 
@@ -16,7 +16,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   bool _obscurePassword = true;
 
-  // This method validates email
+  // Validates email
   String? _validateEmail(String? value) {
     if (value == null || value.isEmpty) {
       return 'Email cannot be empty';
@@ -26,14 +26,27 @@ class _LoginScreenState extends State<LoginScreen> {
     return null;
   }
 
+  // Handle login
   void _login() {
     final userBox = Hive.box('user');
-    final email = _emailController.text;
+    final email = _emailController.text.trim().toLowerCase(); // Normalize email
     final password = _passwordController.text;
 
-    // Attempt login using email
+    // Debugging: Print entered email and stored data
+    if (kDebugMode) {
+      print("Attempting login with email: $email");
+      print("Hive data: ${userBox.toMap()}");
+    }
+
     if (userBox.containsKey(email)) {
-      final storedPassword = userBox.get(email);
+      // Retrieve the user object
+      final userData = userBox.get(email);
+      final storedPassword = userData['password']; // Extract the password field
+
+      if (kDebugMode) {
+        print("Stored Password: $storedPassword, Entered Password: $password");
+      }
+
       if (storedPassword == password) {
         Navigator.pushReplacementNamed(context, '/home');
       } else {
@@ -44,6 +57,7 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
+  // Show error dialog
   void _showErrorDialog(String message) {
     showDialog(
       context: context,
@@ -64,6 +78,7 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
+  // Toggle password visibility
   void _togglePasswordVisibility() {
     setState(() {
       _obscurePassword = !_obscurePassword;
@@ -85,8 +100,8 @@ class _LoginScreenState extends State<LoginScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              // Added MONEYFLOW text widget
-              Text(
+              // App title
+              const Text(
                 'MONEYFLOW',
                 style: TextStyle(
                   fontSize: 32,
@@ -94,12 +109,12 @@ class _LoginScreenState extends State<LoginScreen> {
                   color: Colors.white,
                 ),
               ),
-              SizedBox(height: 40), // Added spacing after MONEYFLOW
+              const SizedBox(height: 40), // Spacing after title
 
-              // Form fields
+              // Email field
               TextFormField(
                 controller: _emailController,
-                style: TextStyle(color: Colors.white),
+                style: const TextStyle(color: Colors.white),
                 decoration: const InputDecoration(
                   labelText: 'Email',
                   labelStyle: TextStyle(color: Colors.grey),
@@ -107,12 +122,14 @@ class _LoginScreenState extends State<LoginScreen> {
                 validator: _validateEmail,
               ),
               const SizedBox(height: 16),
+
+              // Password field
               TextFormField(
                 controller: _passwordController,
-                style: TextStyle(color: Colors.white),
+                style: const TextStyle(color: Colors.white),
                 decoration: InputDecoration(
                   labelText: 'Password',
-                  labelStyle: TextStyle(color: Colors.grey),
+                  labelStyle: const TextStyle(color: Colors.grey),
                   suffixIcon: IconButton(
                     icon: Icon(
                       _obscurePassword ? Icons.visibility_off : Icons.visibility,
@@ -124,19 +141,26 @@ class _LoginScreenState extends State<LoginScreen> {
                 obscureText: _obscurePassword,
               ),
               const SizedBox(height: 20),
+
+              // Login button
               ElevatedButton(
                 onPressed: _login,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.purpleAccent,
-                  minimumSize: Size(double.infinity, 50),
+                  minimumSize: const Size(double.infinity, 50),
                 ),
                 child: const Text('Log In'),
               ),
+
+              // Signup navigation
               TextButton(
                 onPressed: () {
                   Navigator.pushNamed(context, '/signup');
                 },
-                child: const Text('Create an Account', style: TextStyle(color: Colors.grey)),
+                child: const Text(
+                  'Create an Account',
+                  style: TextStyle(color: Colors.grey),
+                ),
               ),
             ],
           ),
@@ -145,4 +169,3 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 }
-
