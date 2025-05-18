@@ -1,0 +1,2 @@
+C:/Users/AQILAH RAZAK/ICT602 - GROUP/projectmoneyflow/android/app/.cxx/Debug/51142x11/x86/CMakeFiles/edit_cache.dir
+C:/Users/AQILAH RAZAK/ICT602 - GROUP/projectmoneyflow/android/app/.cxx/Debug/51142x11/x86/CMakeFiles/rebuild_cache.dir

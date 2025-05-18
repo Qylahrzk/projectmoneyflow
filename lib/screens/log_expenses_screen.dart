@@ -124,6 +124,7 @@ class _LogExpensesScreenState extends State<LogExpensesScreen> {
 
     if (image != null) {
       final inputImage = InputImage.fromFilePath(image.path);
+      // ignore: deprecated_member_use
       final textDetector = GoogleMlKit.vision.textRecognizer();
       final recognizedText = await textDetector.processImage(inputImage);
 

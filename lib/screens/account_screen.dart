@@ -34,7 +34,7 @@ class _AccountScreenState extends State<AccountScreen> {
       _profilePicture = userBox.get('profilePicture');
       _name = userBox.get('name', defaultValue: 'Admin');
       _email = userBox.get('email', defaultValue: 'nuraqilahnur@gmail.com');
-      _defaultCurrency = userBox.get('defaultCurrency', defaultValue: 'MYR (\RM)');
+      _defaultCurrency = userBox.get('defaultCurrency', defaultValue: 'MYR (RM)');
       _sorting = userBox.get('sorting', defaultValue: 'Date');
       _summary = userBox.get('summary', defaultValue: 'Average');
       _syncEnabled = userBox.get('syncEnabled', defaultValue: false);
